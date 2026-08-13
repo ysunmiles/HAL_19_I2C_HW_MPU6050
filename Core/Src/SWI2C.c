@@ -5,9 +5,25 @@
 #include <stdint.h>
 #include "SWI2C.h"
 
+void DWT_Delay_Init(void)
+{
+    // 使能 DWT
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CYCCNT = 0; // 复位计数器
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk; // 开启计数器
+}
+
 void SWI2C_Init(void)
 {
-    /* GPIO is configured by MX_GPIO_Init(); nothing else required here. */
+    /* GPIO is configured by MX_GPIO_Init() */
+	DWT_Delay_Init(); //Delay函数初始化DWT
+}
+
+void SWI2C_Delayus(uint32_t us)
+{
+	    uint32_t cycles = (SystemCoreClock / 1000000) * us;
+    uint32_t start = DWT->CYCCNT;
+    while ((DWT->CYCCNT - start) < cycles);
 }
 
 /*	@brief	写入SCL
@@ -17,7 +33,7 @@ void SWI2C_Init(void)
 void SWI2C_WriteSCL(GPIO_PinState BitValue)
 {
 	HAL_GPIO_WritePin(MPU_SCL_GPIO_Port, MPU_SCL_Pin, BitValue);
-	HAL_Delay(1);
+	SWI2C_Delayus(5);
 }
 
 /*	@brief	写入SDA
@@ -27,7 +43,7 @@ void SWI2C_WriteSCL(GPIO_PinState BitValue)
 void SWI2C_WriteSDA(GPIO_PinState BitValue)
 {
 	HAL_GPIO_WritePin(MPU_SDA_GPIO_Port, MPU_SDA_Pin, BitValue);
-	HAL_Delay(1);
+	SWI2C_Delayus(5);
 }
 
 /*	@brief	读取SDA
@@ -92,6 +108,7 @@ void SWI2C_SendingACK(uint8_t AckBit)
 	SWI2C_WriteSCL(1);
 	SWI2C_WriteSCL(0);
 }
+
 /*	@brief	接收从机的接收应答
 *	@value	AckBit: 应答位，1为非应答NACK，0为应答ACK
 */

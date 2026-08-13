@@ -28,7 +28,6 @@
 #include "OLED.h"
 #include "SWI2C.h"
 #include "MPU6050.h"
-#include "MPU6050_Reg.h"
 
 
 /* USER CODE END Includes */
@@ -45,13 +44,13 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define MPU6050_Addr 0b11010000
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+int16_t AccX, AccY, AccZ, GyroX, GyroY, GyroZ, Temp;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,26 +95,28 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
   OLED_Init();
-  OLED_ShowString(1, 1, "ACK:");
-  OLED_ShowString(2, 1, "Device ID:");
 
-  SWI2C_Start();
-  SWI2C_SendByte(MPU6050_Addr);
-  uint8_t RACK = SWI2C_ReceiveACK();
-  SWI2C_Stop();
-  OLED_ShowNum(1, 6, RACK, 1);
-
-  uint8_t device_id = MPU6050_ReadReg(WHO_AM_I);
-  OLED_ShowHexNum(2, 12, device_id, 2);
-
-
+  OLED_ShowString(1, 1, "Device ID:");
+  MPU6050_Init();
+  uint8_t device_id = MPU6050_GetID();
+  OLED_ShowHexNum(1, 12, device_id, 2);
+  
+  OLED_ShowString(2, 1, "AccX:");
+  OLED_ShowString(3, 1, "AccY:");
+  OLED_ShowString(4, 1, "AccZ:");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_Delay(1000);
+    MPU6050_GetData(&AccX, &AccY, &AccZ, 
+                    &GyroX, &GyroY, &GyroZ, 
+                    &Temp);
+    OLED_ShowSignedNum(2, 7, AccX, 5);
+    OLED_ShowSignedNum(3, 7, AccY, 5);
+    OLED_ShowSignedNum(4, 7, AccZ, 5);
+    HAL_Delay(100);
 
     /* USER CODE END WHILE */
 

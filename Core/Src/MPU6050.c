@@ -52,12 +52,13 @@ void MPU6050_Init(void)
 {
 	SWI2C_Init();
 	
-	MPU6050_WriteReg(PWR_MGMT_1, 	0x01);
+	//具体配置内容参看寄存器映射手册
+	MPU6050_WriteReg(PWR_MGMT_1, 	0x00);
 	MPU6050_WriteReg(PWR_MGMT_2, 	0x00);
-	MPU6050_WriteReg(SMPLRT_DIV, 	0x09);
-	MPU6050_WriteReg(CONFIG, 		0x06);
-	MPU6050_WriteReg(GYRO_CONFIG, 	0x00);
-	MPU6050_WriteReg(ACCEL_CONFIG, 	0x00);
+	MPU6050_WriteReg(SMPLRT_DIV, 	0x10);
+	MPU6050_WriteReg(CONFIG, 		0b00000110);
+	MPU6050_WriteReg(GYRO_CONFIG, 	0b00000000);
+	MPU6050_WriteReg(ACCEL_CONFIG,	0b00000000);
 }
 
 void MPU6050_GetData(int16_t *AccX,	int16_t *AccY,	int16_t *AccZ,

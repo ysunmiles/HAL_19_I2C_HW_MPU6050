@@ -1,58 +1,202 @@
-# HAL_2_OLED
+# HAL_19_I2C_SW_MPU6050
 
-## 简介
+## 项目简介
 
-本项目基于 STM32F103 系列 MCU 和 STM32 HAL 库，演示了通过软件 I2C 控制 OLED 屏幕的显示。
-主程序在 OLED 上输出字符串，并使用 STM32CubeMX 生成的 CMake 构建配置。
+这是一个基于 STM32F103xB 的嵌入式项目，展示如何在 STM32 上使用软件 I2C 驱动两种外设：
 
-## 主要功能
+- MPU6050 6 轴运动传感器
+- SSD1306 OLED 显示屏
 
-- 初始化并使用 STM32 HAL 驱动 STM32F103 MCU
-- 软件 I2C 方式驱动 OLED 显示屏（PB8=SCL，PB9=SDA）
-- OLED 清屏、显示字符、显示字符串、显示二进制/十进制/十六进制数、显示浮点数、显示数组
-- 使用 STM32CubeMX 生成的 Cube HAL 驱动代码与自定义 OLED 模块组合
+项目使用 STM32 HAL + CubeMX 生成的基础工程模板，并在此基础上增加了自定义的软件 I2C 驱动和传感器读取逻辑。
 
-## 关键文件
+主程序会：
 
-- `CMakeLists.txt`：项目根 CMake 构建脚本
-- `CMakePresets.json`：配置和构建预设，支持 `Debug` 和 `Release`
-- `config.ioc`：STM32CubeMX 项目配置
-- `Core/Src/main.c`：主程序入口
-- `Core/Src/OLED.c`：OLED 控制逻辑与软件 I2C 实现
-- `Core/Inc/OLED.h`：OLED 功能接口声明
-- `Core/Inc/OLED_Font.h`：OLED 字库数据
-- `cmake/user_sources.cmake`：自定义源文件和 include 路径注册
-- `Drivers/`：STM32 HAL 库源文件和 CMSIS 头文件
+- 初始化 GPIO
+- 初始化 MPU6050
+- 读取设备 ID
+- 读取加速度、陀螺仪和温度数据
+- 通过 OLED 显示数值
 
-## 构建环境与依赖
+---
 
-- CMake 3.22 及以上
-- Ninja 构建器
-- ARM GCC 交叉编译器（如 `arm-none-eabi-gcc`）
-- STM32 HAL 库（包含在 `Drivers/` 目录中）
+## 硬件连接
 
-## 构建步骤
+目标 MCU：STM32F103 系列
 
-推荐使用 VS Code 的 CMake 工具或命令行：
+本工程中使用软件 I2C 模拟 I2C 总线，GPIO 定义如下：
+
+- MPU SCL -> PB10
+- MPU SDA -> PB11
+- OLED SCL -> PB9
+- OLED SDA -> PB8
+
+对应定义可见：
+
+- [Core/Inc/main.h](Core/Inc/main.h)
+- [Core/Src/gpio.c](Core/Src/gpio.c)
+
+---
+
+## 功能概述
+
+### 1. MPU6050
+
+- 初始化 MPU6050 相关寄存器
+- 读取 WHO_AM_I
+- 读取加速度值（AccX / AccY / AccZ）
+- 读取陀螺仪值（GyroX / GyroY / GyroZ）
+- 读取温度值（Temp）
+
+相关代码：
+
+- [Core/Inc/MPU6050.h](Core/Inc/MPU6050.h)
+- [Core/Src/MPU6050.c](Core/Src/MPU6050.c)
+- [Core/Inc/MPU6050_Reg.h](Core/Inc/MPU6050_Reg.h)
+
+### 2. 软件 I2C
+
+自定义软件 I2C 驱动实现了以下功能：
+
+- 起始信号
+- 停止信号
+- 发送字节
+- 接收字节
+- 发送 ACK / NACK
+- 接收 ACK
+
+相关代码：
+
+- [Core/Inc/SWI2C.h](Core/Inc/SWI2C.h)
+- [Core/Src/SWI2C.c](Core/Src/SWI2C.c)
+
+### 3. OLED 显示
+
+通过 SSD1306 驱动实现如下功能：
+
+- 初始化 OLED
+- 显示字符串
+- 显示数字
+- 显示十六进制数
+- 显示有符号数
+
+相关代码：
+
+- [Core/Inc/OLED.h](Core/Inc/OLED.h)
+- [Core/Src/OLED.c](Core/Src/OLED.c)
+- [Core/Inc/OLED_Font.h](Core/Inc/OLED_Font.h)
+
+---
+
+## 项目结构
+
+```text
+HAL_19_I2C_SW_MPU6050/
+├── CMakeLists.txt
+├── CMakePresets.json
+├── config.ioc
+├── readme.md
+├── startup_stm32f103xb.s
+├── STM32F103XX_FLASH.ld
+├── cmake/
+│   ├── gcc-arm-none-eabi.cmake
+│   ├── user_sources.cmake
+│   └── stm32cubemx/
+├── Core/
+│   ├── Inc/
+│   │   ├── main.h
+│   │   ├── gpio.h
+│   │   ├── OLED.h
+│   │   ├── OLED_Font.h
+│   │   ├── MPU6050.h
+│   │   ├── MPU6050_Reg.h
+│   │   └── SWI2C.h
+│   └── Src/
+│       ├── main.c
+│       ├── gpio.c
+│       ├── OLED.c
+│       ├── MPU6050.c
+│       ├── SWI2C.c
+│       ├── stm32f1xx_it.c
+│       ├── stm32f1xx_hal_msp.c
+│       └── system_stm32f1xx.c
+├── Drivers/
+│   ├── CMSIS/
+│   └── STM32F1xx_HAL_Driver/
+└── build/
+```
+
+---
+
+## 构建方式
+
+本项目使用 CMake + Ninja 构建，适合 VS Code 中使用 CMake Tools 直接编译。
+
+### 方式 1：VS Code + CMake Tools
+
+1. 打开项目目录
+2. 确认已安装 ARM GCC 工具链
+3. 在 VS Code 中打开 CMake Tools
+4. 选择 `Debug` 预设
+5. 运行 Build
+
+### 方式 2：命令行
 
 ```bash
-cd d:/Electronics/HAL_Projects/HAL_2_OLED
+cd d:/Electronics/HAL_Projects/HAL_19_I2C_SW_MPU6050
 cmake --preset Debug
 cmake --build --preset Debug
 ```
 
-## 运行与下载
+如果当前环境使用的是 STM32 Cube 的 `cube-cmake`，也可以直接用 Cube 提供的 CMake 工具链进行构建。
 
-1. 生成固件之后，使用 ST-Link 或其他支持的下载工具烧录生成的 ELF/HEX/BIN 文件到目标板。
-2. 重新上电后，OLED 屏幕应显示主程序中指定的字符串。
+---
 
-## 硬件说明
+## 烧录方式
 
-- 目标 MCU：STM32F103 系列
-- OLED 使用软件 I2C 模拟，默认引脚：
-  - `PB8`：SCL
-  - `PB9`：SDA
+生成的固件可通过 ST-LINK 下载到 STM32 开发板中。
 
-## 许可
+常见步骤：
 
-MIT License
+1. 编译生成 ELF / HEX / BIN 文件
+2. 使用 ST-LINK Utility、STM32CubeProgrammer 或 VS Code 扩展烧录
+3. 上电运行
+4. OLED 上显示 MPU6050 的设备 ID、加速度值等信息
+
+---
+
+## 运行效果
+
+程序启动后，OLED 屏幕通常会显示类似信息：
+
+- Device ID
+- AccX / AccY / AccZ
+- 读取的传感器数据会持续刷新
+
+如果连接正常，`WHO_AM_I` 应该返回 MPU6050 的标准设备 ID（通常为 0x68）。
+
+---
+
+## 代码说明
+
+本项目的核心是“软件 I2C + HAL + 自定义传感器驱动”的组合方式，适合学习以下内容：
+
+- MCU GPIO 控制
+- 软件 I2C 实现
+- STM32 HAL 的初始化流程
+- 传感器寄存器读写
+- OLED 字符显示
+
+---
+
+## 注意事项
+
+- 软件 I2C 的时序对 GPIO 速度和延时比较敏感
+- 若接线错误或上拉不足，MPU6050 可能无法正常通信
+- OLED 和 MPU6050 共用软件 I2C 逻辑时，需注意时序与总线占用
+- 该工程适合学习和调试，不作为工业级高可靠 I2C 驱动直接使用
+
+---
+
+## 许可证
+
+本项目用于学习和开发实验，具体许可证以仓库中实际文件声明为准。
