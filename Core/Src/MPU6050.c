@@ -37,7 +37,7 @@ uint8_t MPU6050_ReadReg(uint8_t RegAddr)
 	SWI2C_SendByte(MPU6050_Addr + 1);
 	SWI2C_ReceiveACK();
 	Byte = SWI2C_ReceiveByte();
-	SWI2C_SendingACK(1);
+	SWI2C_SendACK(1);
 	SWI2C_Stop();
 	
 	return Byte;

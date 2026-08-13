@@ -5,18 +5,18 @@
 #include <stdint.h>
 #include "SWI2C.h"
 
+void SWI2C_Init(void)
+{
+    /* GPIO is configured by MX_GPIO_Init() */
+	DWT_Delay_Init(); //Delay函数初始化DWT
+}
+
 void DWT_Delay_Init(void)
 {
     // 使能 DWT
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CYCCNT = 0; // 复位计数器
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk; // 开启计数器
-}
-
-void SWI2C_Init(void)
-{
-    /* GPIO is configured by MX_GPIO_Init() */
-	DWT_Delay_Init(); //Delay函数初始化DWT
 }
 
 void SWI2C_Delayus(uint32_t us)
@@ -102,7 +102,7 @@ uint8_t SWI2C_ReceiveByte(void)
 /*	@brief	向从机发送应答
 *	@param	AckBit: 应答位，1为非应答NACK，0为应答ACK
 */
-void SWI2C_SendingACK(uint8_t AckBit)
+void SWI2C_SendACK(uint8_t AckBit)
 {
 	SWI2C_WriteSDA(AckBit);
 	SWI2C_WriteSCL(1);
