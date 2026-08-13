@@ -1,5 +1,4 @@
-#include "stm32f10x.h"                  // Device header
-#include "MyI2C.h"
+#include "SWI2C.h"
 #include "MPU6050_Reg.h"
 
 #define MPU6050_Addr 0b11010000
@@ -10,14 +9,14 @@
 */
 void MPU6050_WriteReg(uint8_t RegAddr, uint8_t Byte)
 {
-	MyI2C_Start();
-	MyI2C_SendByte(MPU6050_Addr + 0);
-	MyI2C_ReceiveACK();
-	MyI2C_SendByte(RegAddr);
-	MyI2C_ReceiveACK();
-	MyI2C_SendByte(Byte);
-	MyI2C_ReceiveACK();
-	MyI2C_Stop();
+	SWI2C_Start();
+	SWI2C_SendByte(MPU6050_Addr + 0);
+	SWI2C_ReceiveACK();
+	SWI2C_SendByte(RegAddr);
+	SWI2C_ReceiveACK();
+	SWI2C_SendByte(Byte);
+	SWI2C_ReceiveACK();
+	SWI2C_Stop();
 }
 
 /*·	@brief	读取MPU6050指定寄存器的数据
@@ -28,18 +27,18 @@ uint8_t MPU6050_ReadReg(uint8_t RegAddr)
 {
 	uint8_t Byte;
 	
-	MyI2C_Start();
-	MyI2C_SendByte(MPU6050_Addr + 0);
-	MyI2C_ReceiveACK();
-	MyI2C_SendByte(RegAddr);
-	MyI2C_ReceiveACK();
+	SWI2C_Start();
+	SWI2C_SendByte(MPU6050_Addr + 0);
+	SWI2C_ReceiveACK();
+	SWI2C_SendByte(RegAddr);
+	SWI2C_ReceiveACK();
 	
-	MyI2C_Start();
-	MyI2C_SendByte(MPU6050_Addr + 1);
-	MyI2C_ReceiveACK();
-	Byte = MyI2C_ReceiveByte();
-	MyI2C_SendingACK(1);
-	MyI2C_Stop();
+	SWI2C_Start();
+	SWI2C_SendByte(MPU6050_Addr + 1);
+	SWI2C_ReceiveACK();
+	Byte = SWI2C_ReceiveByte();
+	SWI2C_SendingACK(1);
+	SWI2C_Stop();
 	
 	return Byte;
 }
@@ -51,7 +50,7 @@ uint8_t MPU6050_GetID(void)
 
 void MPU6050_Init(void)
 {
-	MyI2C_Init();
+	SWI2C_Init();
 	
 	MPU6050_WriteReg(PWR_MGMT_1, 	0x01);
 	MPU6050_WriteReg(PWR_MGMT_2, 	0x00);

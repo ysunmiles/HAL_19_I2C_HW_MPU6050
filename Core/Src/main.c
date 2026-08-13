@@ -19,11 +19,18 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "gpio.h"
+#include "stm32f103xb.h"
+#include "stm32f1xx_hal_gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "OLED.h"
 #include <stdint.h>
+#include "OLED.h"
+#include "SWI2C.h"
+#include "MPU6050.h"
+#include "MPU6050_Reg.h"
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,13 +45,13 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define MPU6050_Addr 0b11010000
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t array[] = {9,15,16,99, 71};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -89,18 +96,25 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
   OLED_Init();
-  OLED_Clear();
+  OLED_ShowString(1, 1, "ACK:");
+  OLED_ShowString(2, 1, "Device ID:");
+
+  SWI2C_Start();
+  SWI2C_SendByte(MPU6050_Addr);
+  uint8_t RACK = SWI2C_ReceiveACK();
+  SWI2C_Stop();
+  OLED_ShowNum(1, 6, RACK, 1);
+
+  uint8_t device_id = MPU6050_ReadReg(WHO_AM_I);
+  OLED_ShowHexNum(2, 12, device_id, 2);
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    OLED_ShowString(1, 1, "bobo chuchu =3=");
-    OLED_ShowFloat(2, 1, 3.123456, 5);
-    OLED_ShowArray(3, 1, array, sizeof(array));
-    OLED_ShowHexArray(4, 1, array, sizeof(array));
-
     HAL_Delay(1000);
 
     /* USER CODE END WHILE */
